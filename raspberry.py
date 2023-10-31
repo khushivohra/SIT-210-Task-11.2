@@ -1,4 +1,4 @@
-import tkinter as tk
+6import tkinter as tk
 from tkinter import ttk
 import paho.mqtt.client as mqtt
 import RPi.GPIO as GPIO
@@ -9,47 +9,57 @@ broker_address = "broker.hivemq.com"
 port = 1883
 topic = "PhValuezzz"
 
-# GPIO pins for servo motors
-SERVO_PIN_1 = 17  # GPIO pin for servo 1
-SERVO_PIN_2 = 18  # GPIO pin for servo 2
-FEEDER_PIN = 22  # GPIO pin for the feeder servo
+#controls GPIO pin on R.Pi
+import RPi.GPIO as GPIO 
+import time
 
-# Initialize GPIO
+# Set the GPIO mode
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(SERVO_PIN_1, GPIO.OUT)
-GPIO.setup(SERVO_PIN_2, GPIO.OUT)
-GPIO.setup(FEEDER_PIN, GPIO.OUT)
 
-# Servo PWM initialization
-servo_pwm_1 = GPIO.PWM(SERVO_PIN_1, 50)  # 50 Hz frequency
-servo_pwm_2 = GPIO.PWM(SERVO_PIN_2, 50)  # 50 Hz frequency
-feeder_pwm = GPIO.PWM(FEEDER_PIN, 50)  # 50 Hz frequency
+# Set the GPIO pins for the servo motors
+servo_pin_1 = 17
+servo_pin_2 = 18
+feeder_pin = 22
 
-# Start PWM with 0 duty cycle (off)
-servo_pwm_1.start(0)
-servo_pwm_2.start(0)
-feeder_pwm.start(0)
+# Set the PWM parameters
+frequency = 50  # 50 Hz (typical for most servos)
+duty_cycle_min = 2.5  # 0 degrees
+duty_cycle_max = 12.5  # 180 degrees
 
-# Function to control servo 1
-def control_servo_1():
-    action_label.config(text="Dispensing reagent using servo 1")
-    # Simulate servo control for dispensing reagent for pH below 7
-    # Adjust duty cycle as needed for your servo and setup
-    servo_pwm_1.ChangeDutyCycle(7)  # Change duty cycle for appropriate movement
+# Initialize the servo motors
+GPIO.setup(servo_pin_1, GPIO.OUT)
+pwm_1 = GPIO.PWM(servo_pin_1, frequency)
+GPIO.setup(servo_pin_2, GPIO.OUT)
+pwm_2 = GPIO.PWM(servo_pin_2, frequency)
+GPIO.setup(feeder_pin, GPIO.OUT)
+pwm_feeder = GPIO.PWM(feeder_pin, frequency)
 
-# Function to control servo 2
-def control_servo_2():
-    action_label.config(text="Dispensing reagent using servo 2")
-    # Simulate servo control for dispensing reagent for pH above 8
-    # Adjust duty cycle as needed for your servo and setup
-    servo_pwm_2.ChangeDutyCycle(7)  # Change duty cycle for appropriate movement
+# Function to move a servo to a specific angle
+def set_angle(servo, angle):
+    duty_cycle = ((angle / 180.0) * (duty_cycle_max - duty_cycle_min)) + duty_cycle_min
+    servo.ChangeDutyCycle(duty_cycle)
+    time.sleep(1)
 
-# Function to control the feeder
-def control_feeder():
-    action_label.config(text="Dispensing using feeder")
-    # Simulate servo control for the feeder
-    # Adjust duty cycle as needed for your servo and setup
-    feeder_pwm.ChangeDutyCycle(7)  # Change duty cycle for appropriate movement
+# Rotate servo 1 to 0 degrees (minimum)
+set_angle(pwm_1, 0)
+
+# Pause for a moment
+time.sleep(1)
+
+# Rotate servo 1 to 90 degrees
+set_angle(pwm_1, 90)
+
+# Pause for a moment
+time.sleep(1)
+
+# Rotate servo 1 to 180 degrees (maximum)
+set_angle(pwm_1, 180)
+
+# Clean up and exit
+pwm_1.stop()
+pwm_2.stop()
+pwm_feeder.stop()
+GPIO.cleanup()
 
 # MQTT callback when a message is received
 def on_message(client, userdata, message):
