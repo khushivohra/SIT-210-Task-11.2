@@ -1,4 +1,4 @@
-6import tkinter as tk
+import tkinter as tk
 from tkinter import ttk
 import paho.mqtt.client as mqtt
 import RPi.GPIO as GPIO
@@ -9,63 +9,53 @@ broker_address = "broker.hivemq.com"
 port = 1883
 topic = "PhValuezzz"
 
-#controls GPIO pin on R.Pi
-import RPi.GPIO as GPIO 
+import RPi.GPIO as GPIO
 import time
 
 # Set the GPIO mode
 GPIO.setmode(GPIO.BCM)
 
 # Set the GPIO pins for the servo motors
-servo_pin_1 = 17
-servo_pin_2 = 18
-feeder_pin = 22
+servo_pin_1 = 18
+servo_pin_2 = 23
+feeder_pin = 24
 
 # Set the PWM parameters
-frequency = 50  # 50 Hz (typical for most servos)
-duty_cycle_min = 2.5  # 0 degrees
-duty_cycle_max = 12.5  # 180 degrees
-
-# Initialize the servo motors
 GPIO.setup(servo_pin_1, GPIO.OUT)
-pwm_1 = GPIO.PWM(servo_pin_1, frequency)
 GPIO.setup(servo_pin_2, GPIO.OUT)
-pwm_2 = GPIO.PWM(servo_pin_2, frequency)
 GPIO.setup(feeder_pin, GPIO.OUT)
-pwm_feeder = GPIO.PWM(feeder_pin, frequency)
 
-# Function to move a servo to a specific angle
-def set_angle(servo, angle):
-    duty_cycle = ((angle / 180.0) * (duty_cycle_max - duty_cycle_min)) + duty_cycle_min
-    servo.ChangeDutyCycle(duty_cycle)
-    time.sleep(1)
+pwm_1 = GPIO.PWM(servo_pin_1, 50)  # (typical for most servos) (controls voltage at 50Hz)
+pwm_2 = GPIO.PWM(servo_pin_2, 50)
+pwm_3 = GPIO.PWM(feeder_pin, 50)
 
-# Rotate servo 1 to 0 degrees (minimum)
-set_angle(pwm_1, 0)
+# Function to set the servo angle
+def set_servo_angle(pwm, angle):
+    duty_cycle = (angle / 18.0) + 2.5
+    pwm.ChangeDutyCycle(duty_cycle)
 
-# Pause for a moment
-time.sleep(1)
+try:
+    pwm_1.start(0) #Starts each servo with an initial duty cycle of 0
+    pwm_2.start(0)
+    pwm_3.start(0)
+    
+    while True:
+        set_servo_angle(pwm_1, 180)  # Rotate servo 1 to 180 degrees
+        set_servo_angle(pwm_2, 180)  # Rotate servo 2 to 180 degrees
+        set_servo_angle(pwm_3, 180)  # Rotate servo 3 to 180 degrees
+        time.sleep(2)
 
-# Rotate servo 1 to 90 degrees
-set_angle(pwm_1, 90)
-
-# Pause for a moment
-time.sleep(1)
-
-# Rotate servo 1 to 180 degrees (maximum)
-set_angle(pwm_1, 180)
-
-# Clean up and exit
-pwm_1.stop()
-pwm_2.stop()
-pwm_feeder.stop()
-GPIO.cleanup()
+except KeyboardInterrupt:
+    pwm_1.stop()
+    pwm_2.stop()
+    pwm_3.stop()
+    GPIO.cleanup()
 
 # MQTT callback when a message is received
 def on_message(client, userdata, message):
     ph_value = float(message.payload.decode("utf-8"))
     update_ph_label(ph_value)
-    if ph_value < 7:
+    if ph_value < 6:
         control_servo_1()
     elif ph_value > 8:
         control_servo_2()
