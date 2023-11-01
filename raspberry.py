@@ -34,31 +34,36 @@ def set_servo_angle(pwm, angle):
     duty_cycle = (angle / 18.0) + 2.5
     pwm.ChangeDutyCycle(duty_cycle)
 
-try:
-    pwm_1.start(0) #Starts each servo with an initial duty cycle of 0
-    pwm_2.start(0)
-    pwm_3.start(0)
-    
-    while True:
-        set_servo_angle(pwm_1, 180)  # Rotate servo 1 to 180 degrees
-        set_servo_angle(pwm_2, 180)  # Rotate servo 2 to 180 degrees
-        set_servo_angle(pwm_3, 180)  # Rotate servo 3 to 180 degrees
-        time.sleep(2)
-
-except KeyboardInterrupt:
-    pwm_1.stop()
-    pwm_2.stop()
-    pwm_3.stop()
-    GPIO.cleanup()
 
 # MQTT callback when a message is received
 def on_message(client, userdata, message):
     ph_value = float(message.payload.decode("utf-8"))
     update_ph_label(ph_value)
     if ph_value < 6:
-        control_servo_1()
+        try:
+        pwm_1.start(0)  #Starts each servo with an initial duty cycle of 0
+          while True:
+             set_servo_angle(pwm_1, 180)
+        except KeyboardInterrupt:
+        pwm_1.stop()
+            
     elif ph_value > 8:
-        control_servo_2()
+        try:
+        pwm_2.start(0)
+        while True:
+             set_servo_angle(pwm_2, 180) # Rotate servo 1 to 180 degrees
+        except KeyboardInterrupt:
+        pwm_2.stop()
+          
+
+def control_feeder:
+ try:
+        pwm_3.start(0)  #Starts each servo with an initial duty cycle of 0
+        while True:
+             set_servo_angle(pwm_3, 180)
+        except KeyboardInterrupt:
+        pwm_3.stop()
+
 
 # Function to update the pH label in the GUI
 def update_ph_label(value):
