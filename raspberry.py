@@ -42,7 +42,7 @@ def on_message(client, userdata, message):
     if ph_value < 6:
         try:
         pwm_1.start(0)  #Starts each servo with an initial duty cycle of 0
-          while True:
+         
              set_servo_angle(pwm_1, 180)
         except KeyboardInterrupt:
         pwm_1.stop()
@@ -50,7 +50,7 @@ def on_message(client, userdata, message):
     elif ph_value > 8:
         try:
         pwm_2.start(0)
-        while True:
+     
              set_servo_angle(pwm_2, 180) # Rotate servo 1 to 180 degrees
         except KeyboardInterrupt:
         pwm_2.stop()
@@ -59,7 +59,7 @@ def on_message(client, userdata, message):
 def control_feeder:
  try:
         pwm_3.start(0)  #Starts each servo with an initial duty cycle of 0
-        while True:
+       
              set_servo_angle(pwm_3, 180)
         except KeyboardInterrupt:
         pwm_3.stop()
